@@ -1397,7 +1397,6 @@ function App() {
       if (next >= points.length) {
         /* Toutes les énigmes résolues → retour au point de départ */
         setReturning(true);
-        setDProg(0); // reset slider démo pour simuler le retour
       } else {
         setAIdx(p => Math.min(p + 1, points.length - 1));
       }
@@ -1417,13 +1416,12 @@ function App() {
     }
   };
   const resetGame = () => {
-    if (geoRef.current !== null && "geolocation" in navigator) {
-      navigator.geolocation.clearWatch(geoRef.current);
-      geoRef.current = null;
-    }
+  if (geoRef.current !== null && "geolocation" in navigator) {
+    navigator.geolocation.clearWatch(geoRef.current);
+    geoRef.current = null;
+  }
     setStage("intro");
     setMapOpen(false);
-    setMode("field");
     setLevel(null);
     setPoints([]);
     setAIdx(0);
@@ -2276,11 +2274,7 @@ oPerm !== "granted" && /*#__PURE__*/React.createElement("button", {
     onClick: reqOrient
   }, "🧭 Activer la boussole")
 ))
-oPerm !== "granted" && /*#__PURE__*/React.createElement("button", {
-    className: "btn btn-ghost",
-    style: { width: "100%" },
-    onClick: reqOrient
-  }, "🧭 Activer la boussole"), /*#__PURE__*/React.createElement("div", {
+
     style: S.sep
   }), /*#__PURE__*/React.createElement("div", {
     style: S.col
@@ -2703,7 +2697,7 @@ oPerm !== "granted" && /*#__PURE__*/React.createElement("button", {
       minWidth: 140,
       padding: ".8rem"
     },
-    onClick: () => level && startGame(level, mode)
+    onClick: () => level && startGame(level)
   }, "Relancer une partie"), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-ghost",
     style: {
