@@ -1296,9 +1296,22 @@ function App() {
     }
     setDist(havDist(userPos, curPt.location));
   }, [userPos, curPt]);
+
+  // Ref qui garde trace de l'ID de la balise au moment où on a avancé
+  // Permet d'ignorer les déclenchements résiduels avec l'ancienne distance
+  const activePointIdRef = useRef(null);
+  useEffect(() => {
+    if (curPt) activePointIdRef.current = curPt.id;
+  }, [curPt]);
+
   useEffect(() => {
     if (!curPt || dist === null) return;
-    if (dist <= curPt.radius) setUnlocked(p => p.includes(curPt.id) ? p : [...p, curPt.id]);
+    // Vérifier que la distance calculée correspond bien à la balise ACTIVE
+    // (évite le déverrouillage immédiat quand on vient de changer de cible)
+    if (curPt.id !== activePointIdRef.current) return;
+    if (dist <= curPt.radius) {
+      setUnlocked(p => p.includes(curPt.id) ? p : [...p, curPt.id]);
+    }
   }, [curPt, dist]);
 
   /* Distance au point de départ (phase returning) */
@@ -1390,7 +1403,7 @@ function App() {
     const next = solved.length + 1;
     setSolved(p => [...p, curPt.id]);
     setTokens(p => [...p, curPt.reward]);
-    setAnsFb(curPt.riddle.clue + "\n" + curPt.riddle.rewardHint);
+    setAnsFb("✅ Bonne réponse ! Tu as gagné un fragment du mot secret. 🏴\u200D☠\uFE0F");
     setTimeout(() => {
       setAnsFb(null);
       setAns("");
@@ -1399,10 +1412,10 @@ function App() {
         setReturning(true);
         setDProg(0); // reset slider démo pour simuler le retour
       } else {
-        setAIdx(p => Math.min(p + 1, points.length - 1));
-        // Réinitialiser les déverrouillages pour que la balise suivante
-        // exige bien une nouvelle approche physique
+        // Réinitialiser AVANT de changer de cible pour éviter le re-déclenchement
         setUnlocked([]);
+        setDist(null);
+        setAIdx(p => Math.min(p + 1, points.length - 1));
       }
     }, 1700);
   };
@@ -1635,14 +1648,14 @@ function App() {
       color: "#4b2a17",
       padding: ".5rem 1rem"
     }
-  }, CAPTAIN, " t'attend au ponton de Playa Regat'O.")), /*#__PURE__*/React.createElement("p", {
+  }, CAPTAIN, " t'attend au ponton du lac.")), /*#__PURE__*/React.createElement("p", {
     style: S.txt
   }, CAPTAIN, " a perdu son coffre maudit au c\u0153ur du lac. Tes bou\xE9es virtuelles et ton t\xE9l\xE9phone font office de compas pour r\xE9cup\xE9rer chaque lettre du mot secret."), /*#__PURE__*/React.createElement("div", {
     className: "bubble",
     style: {
       fontSize: ".9rem"
     }
-  }, /*#__PURE__*/React.createElement("p", null, "\xAB Ici ", CAPTAIN, " : choisis ton niveau Moussaillon et ram\xE8ne-moi mon tr\xE9sor ! \xBB")), /*#__PURE__*/React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("p", null, "\xAB Ici ", CAPTAIN, " : choisis ton niveau et ram\xE8ne-moi mon tr\xE9sor ! \xBB")), /*#__PURE__*/React.createElement("div", {
     style: {
       display: "flex",
       flexWrap: "wrap",
