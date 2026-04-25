@@ -1,6 +1,6 @@
 {
-  "name": "Pirate Quest — Lac du Der",
-  "short_name": "Pirate Quest",
+  "name": "Trésor Pirate — Lac du Der",
+  "short_name": "Trésor Pirate",
   "description": "Jeu de chasse au trésor GPS sur le Lac du Der avec le Capitaine Francis BlackWood",
   "start_url": "./index.html",
   "display": "fullscreen",
@@ -66,7 +66,7 @@
       "sizes": "390x844",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Écran d'accueil Pirate Quest"
+      "label": "Écran d'accueil Trésor Pirate"
     }
   ]
 }

@@ -1,14 +1,14 @@
 /* ================================================================
-   SERVICE WORKER — Pirate Quest PWA
+   SERVICE WORKER — Trésor Pirate PWA
    Stratégie :
    - App shell (HTML, JS, CSS) : Cache First
    - Tuiles de carte (CartoDB/OSM) : Cache First avec fallback réseau
    - APIs externes (fonts, Leaflet, React) : Stale While Revalidate
    ================================================================ */
 
-const CACHE_VERSION    = 'pirate-quest-v5';
-const TILE_CACHE       = 'pirate-tiles-v5';
-const ASSETS_CACHE     = 'pirate-assets-v5';
+const CACHE_VERSION    = 'tresor-pirate-v9';
+const TILE_CACHE       = 'tresor-tiles-v9';
+const ASSETS_CACHE     = 'tresor-assets-v9';
 
 /* Assets à précacher au moment de l'installation */
 const PRECACHE_ASSETS = [

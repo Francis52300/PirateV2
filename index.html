@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
-<title>Trésor Pirate  — Lac du Der</title>
+<title>Trésor Pirate — Lac du Der</title>
 
 <!-- PWA Manifest -->
 <link rel="manifest" href="manifest.json"/>
@@ -23,7 +23,7 @@
 
 <!-- SEO / partage -->
 <meta name="description" content="Jeu de chasse au trésor GPS sur le Lac du Der avec le Capitaine Francis BlackWood"/>
-<meta name="application-name" content="TrésorPirate"/>
+<meta name="application-name" content="Trésor Pirate"/>
 
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -1397,8 +1397,12 @@ function App() {
       if (next >= points.length) {
         /* Toutes les énigmes résolues → retour au point de départ */
         setReturning(true);
+        setDProg(0); // reset slider démo pour simuler le retour
       } else {
         setAIdx(p => Math.min(p + 1, points.length - 1));
+        // Réinitialiser les déverrouillages pour que la balise suivante
+        // exige bien une nouvelle approche physique
+        setUnlocked([]);
       }
     }, 1700);
   };
@@ -1416,12 +1420,13 @@ function App() {
     }
   };
   const resetGame = () => {
-  if (geoRef.current !== null && "geolocation" in navigator) {
-    navigator.geolocation.clearWatch(geoRef.current);
-    geoRef.current = null;
-  }
+    if (geoRef.current !== null && "geolocation" in navigator) {
+      navigator.geolocation.clearWatch(geoRef.current);
+      geoRef.current = null;
+    }
     setStage("intro");
     setMapOpen(false);
+    setMode("field");
     setLevel(null);
     setPoints([]);
     setAIdx(0);
@@ -1630,7 +1635,7 @@ function App() {
       color: "#4b2a17",
       padding: ".5rem 1rem"
     }
-  }, CAPTAIN, " t'attend au ponton du lac.")), /*#__PURE__*/React.createElement("p", {
+  }, CAPTAIN, " t'attend au ponton de Playa Regat'O.")), /*#__PURE__*/React.createElement("p", {
     style: S.txt
   }, CAPTAIN, " a perdu son coffre maudit au c\u0153ur du lac. Tes bou\xE9es virtuelles et ton t\xE9l\xE9phone font office de compas pour r\xE9cup\xE9rer chaque lettre du mot secret."), /*#__PURE__*/React.createElement("div", {
     className: "bubble",
@@ -1926,7 +1931,7 @@ function App() {
       fontSize: ".82rem",
       color: "#3b1b0b"
     }
-  }, "\xC9nigme \xAB ", point.riddle.theme, " \xBB")), /*#__PURE__*/React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: ".72rem",
       textTransform: "uppercase",
@@ -2145,16 +2150,15 @@ function App() {
       padding: "1.5rem 2rem"
     }
   }, /*#__PURE__*/React.createElement("div", {
-    style: { display: "flex", flexDirection: "column", alignItems: "center", gap: "1rem" }
-  },
-  /*#__PURE__*/React.createElement("div", {
+    style: { display:"flex", flexDirection:"column", alignItems:"center", gap:"1rem" }
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       position: "relative",
       width: 240,
       height: 240,
       flexShrink: 0,
       "--dial-rot": `rotate(${(360 - heading).toFixed(1)}deg)`,
-      "--arrow-rot": `rotate(${brg.toFixed(1)}deg)`
+      "--arrow-rot": `rotate(${((brg - heading + 360) % 360).toFixed(1)}deg)`
     }
   },
   /*#__PURE__*/React.createElement("svg", {
@@ -2163,93 +2167,104 @@ function App() {
     style: { overflow: "visible", display: "block" }
   },
     /*#__PURE__*/React.createElement("defs", null,
-      /*#__PURE__*/React.createElement("radialGradient", { id: "cgFace", cx: "35%", cy: "30%", r: "65%" },
-        /*#__PURE__*/React.createElement("stop", { offset: "0%",   stopColor: "#fef6df" }),
-        /*#__PURE__*/React.createElement("stop", { offset: "55%",  stopColor: "#e8c87a" }),
-        /*#__PURE__*/React.createElement("stop", { offset: "100%", stopColor: "#b37230" })
+      /*#__PURE__*/React.createElement("radialGradient", { id:"cgFace", cx:"35%", cy:"30%", r:"65%" },
+        /*#__PURE__*/React.createElement("stop", { offset:"0%",   stopColor:"#fef6df" }),
+        /*#__PURE__*/React.createElement("stop", { offset:"55%",  stopColor:"#e8c87a" }),
+        /*#__PURE__*/React.createElement("stop", { offset:"100%", stopColor:"#b37230" })
       ),
-      /*#__PURE__*/React.createElement("radialGradient", { id: "cgRim", cx: "50%", cy: "50%", r: "50%" },
-        /*#__PURE__*/React.createElement("stop", { offset: "0%",   stopColor: "#4a2510" }),
-        /*#__PURE__*/React.createElement("stop", { offset: "100%", stopColor: "#1a0803" })
+      /*#__PURE__*/React.createElement("radialGradient", { id:"cgRim", cx:"50%", cy:"50%", r:"50%" },
+        /*#__PURE__*/React.createElement("stop", { offset:"0%",   stopColor:"#4a2510" }),
+        /*#__PURE__*/React.createElement("stop", { offset:"100%", stopColor:"#1a0803" })
       ),
-      /*#__PURE__*/React.createElement("filter", { id: "cgShadow", x: "-20%", y: "-20%", width: "140%", height: "140%" },
-        /*#__PURE__*/React.createElement("feDropShadow", { dx: "0", dy: "6", stdDeviation: "8", floodOpacity: "0.55" })
+      /*#__PURE__*/React.createElement("filter", { id:"cgShadow", x:"-20%", y:"-20%", width:"140%", height:"140%" },
+        /*#__PURE__*/React.createElement("feDropShadow", { dx:"0", dy:"6", stdDeviation:"8", floodOpacity:"0.55" })
       ),
-      /*#__PURE__*/React.createElement("filter", { id: "cgGlow" },
-        /*#__PURE__*/React.createElement("feDropShadow", { dx: "0", dy: "0", stdDeviation: "4", floodColor: "#f97316", floodOpacity: "0.8" })
+      /*#__PURE__*/React.createElement("filter", { id:"cgGlow" },
+        /*#__PURE__*/React.createElement("feDropShadow", { dx:"0", dy:"0", stdDeviation:"4", floodColor:"#f97316", floodOpacity:"0.8" })
       )
     ),
 
     /* ── Boîtier extérieur ── */
-    /*#__PURE__*/React.createElement("circle", { cx: "120", cy: "120", r: "116", fill: "url(#cgRim)", filter: "url(#cgShadow)" }),
-    /*#__PURE__*/React.createElement("circle", { cx: "120", cy: "120", r: "104", fill: "none", stroke: "rgba(200,150,60,.3)", strokeWidth: "1" }),
+    /*#__PURE__*/React.createElement("circle", { cx:"120", cy:"120", r:"116", fill:"url(#cgRim)", filter:"url(#cgShadow)" }),
+    /*#__PURE__*/React.createElement("circle", { cx:"120", cy:"120", r:"104", fill:"none", stroke:"rgba(200,150,60,.3)", strokeWidth:"1" }),
 
-    /* ── Cadran rotatif (tourne avec le heading) ── */
+    /* ── Cadran rotatif (tourne avec le heading, via CSS var) ── */
     /*#__PURE__*/React.createElement("g", {
       style: { transform: "var(--dial-rot)", transformOrigin: "120px 120px", transition: "transform 0.5s cubic-bezier(0.25,0.46,0.45,0.94)" }
     },
-      /*#__PURE__*/React.createElement("circle", { cx: "120", cy: "120", r: "100", fill: "url(#cgFace)" }),
+      /* Face parchemin */
+      /*#__PURE__*/React.createElement("circle", { cx:"120", cy:"120", r:"100", fill:"url(#cgFace)" }),
 
-      /* Graduations majeures */
+      /* Graduations majeures : 0°, 30°, 60°... (12 traits) */
       ...[0,30,60,90,120,150,180,210,240,270,300,330].map(deg => {
         const r = deg * Math.PI / 180;
-        return /*#__PURE__*/React.createElement("line", { key: "maj"+deg,
+        return /*#__PURE__*/React.createElement("line", { key:"maj"+deg,
           x1: 120 + 83*Math.sin(r), y1: 120 - 83*Math.cos(r),
           x2: 120 + 97*Math.sin(r), y2: 120 - 97*Math.cos(r),
-          stroke: "#7a4a20", strokeWidth: "2.5", strokeLinecap: "round"
+          stroke:"#7a4a20", strokeWidth:"2.5", strokeLinecap:"round"
         });
       }),
 
-      /* Graduations intermédiaires */
+      /* Graduations intermédiaires : 15°, 45°... (12 traits) */
       ...[15,45,75,105,135,165,195,225,255,285,315,345].map(deg => {
         const r = deg * Math.PI / 180;
-        return /*#__PURE__*/React.createElement("line", { key: "int"+deg,
+        return /*#__PURE__*/React.createElement("line", { key:"int"+deg,
           x1: 120 + 88*Math.sin(r), y1: 120 - 88*Math.cos(r),
           x2: 120 + 97*Math.sin(r), y2: 120 - 97*Math.cos(r),
-          stroke: "rgba(122,74,32,.5)", strokeWidth: "1.5", strokeLinecap: "round"
+          stroke:"rgba(122,74,32,.5)", strokeWidth:"1.5", strokeLinecap:"round"
         });
       }),
 
-      /* Graduations mineures */
+      /* Graduations mineures : 5°, 10°, 20°, 25°... (48 traits) */
       ...[...Array(72).keys()].filter(i => i%3!==0).map(i => {
         const r = (i*5) * Math.PI / 180;
-        return /*#__PURE__*/React.createElement("line", { key: "min"+i,
+        return /*#__PURE__*/React.createElement("line", { key:"min"+i,
           x1: 120 + 92*Math.sin(r), y1: 120 - 92*Math.cos(r),
           x2: 120 + 97*Math.sin(r), y2: 120 - 97*Math.cos(r),
-          stroke: "rgba(122,74,32,.3)", strokeWidth: "1", strokeLinecap: "round"
+          stroke:"rgba(122,74,32,.3)", strokeWidth:"1", strokeLinecap:"round"
         });
       }),
 
-      /*#__PURE__*/React.createElement("circle", { cx: "120", cy: "120", r: "82", fill: "none", stroke: "rgba(122,74,32,.25)", strokeWidth: "1" }),
-      /*#__PURE__*/React.createElement("circle", { cx: "120", cy: "120", r: "65", fill: "none", stroke: "rgba(122,74,32,.15)", strokeWidth: "0.8" }),
+      /* Cercle intérieur décoratif */
+      /*#__PURE__*/React.createElement("circle", { cx:"120", cy:"120", r:"82", fill:"none", stroke:"rgba(122,74,32,.25)", strokeWidth:"1" }),
+      /*#__PURE__*/React.createElement("circle", { cx:"120", cy:"120", r:"65", fill:"none", stroke:"rgba(122,74,32,.15)", strokeWidth:"0.8" }),
 
-      /*#__PURE__*/React.createElement("text", { x: "120", y: "57",  textAnchor: "middle", fontFamily: "Pirata One,serif", fontSize: "18", fontWeight: "bold", fill: "#c0392b" }, "N"),
-      /*#__PURE__*/React.createElement("text", { x: "183", y: "125", textAnchor: "middle", fontFamily: "Pirata One,serif", fontSize: "14", fill: "#4a2510" }, "E"),
-      /*#__PURE__*/React.createElement("text", { x: "120", y: "193", textAnchor: "middle", fontFamily: "Pirata One,serif", fontSize: "14", fill: "#4a2510" }, "S"),
-      /*#__PURE__*/React.createElement("text", { x: "57",  y: "125", textAnchor: "middle", fontFamily: "Pirata One,serif", fontSize: "14", fill: "#4a2510" }, "O"),
+      /* Points cardinaux — positionnés sur le cadran */
+      /*#__PURE__*/React.createElement("text", { x:"120", y:"57",  textAnchor:"middle", fontFamily:"Pirata One,serif", fontSize:"18", fontWeight:"bold", fill:"#c0392b" }, "N"),
+      /*#__PURE__*/React.createElement("text", { x:"183", y:"125", textAnchor:"middle", fontFamily:"Pirata One,serif", fontSize:"14", fill:"#4a2510" }, "E"),
+      /*#__PURE__*/React.createElement("text", { x:"120", y:"193", textAnchor:"middle", fontFamily:"Pirata One,serif", fontSize:"14", fill:"#4a2510" }, "S"),
+      /*#__PURE__*/React.createElement("text", { x:"57",  y:"125", textAnchor:"middle", fontFamily:"Pirata One,serif", fontSize:"14", fill:"#4a2510" }, "O"),
 
-      /*#__PURE__*/React.createElement("text", { x: "168", y: "72",  textAnchor: "middle", fontFamily: "Pirata One,serif", fontSize: "9", fill: "rgba(74,37,16,.6)" }, "NE"),
-      /*#__PURE__*/React.createElement("text", { x: "168", y: "172", textAnchor: "middle", fontFamily: "Pirata One,serif", fontSize: "9", fill: "rgba(74,37,16,.6)" }, "SE"),
-      /*#__PURE__*/React.createElement("text", { x: "72",  y: "172", textAnchor: "middle", fontFamily: "Pirata One,serif", fontSize: "9", fill: "rgba(74,37,16,.6)" }, "SO"),
-      /*#__PURE__*/React.createElement("text", { x: "72",  y: "72",  textAnchor: "middle", fontFamily: "Pirata One,serif", fontSize: "9", fill: "rgba(74,37,16,.6)" }, "NO"),
+      /* Sous-cardinaux */
+      /*#__PURE__*/React.createElement("text", { x:"168", y:"72",  textAnchor:"middle", fontFamily:"Pirata One,serif", fontSize:"9", fill:"rgba(74,37,16,.6)" }, "NE"),
+      /*#__PURE__*/React.createElement("text", { x:"168", y:"172", textAnchor:"middle", fontFamily:"Pirata One,serif", fontSize:"9", fill:"rgba(74,37,16,.6)" }, "SE"),
+      /*#__PURE__*/React.createElement("text", { x:"72",  y:"172", textAnchor:"middle", fontFamily:"Pirata One,serif", fontSize:"9", fill:"rgba(74,37,16,.6)" }, "SO"),
+      /*#__PURE__*/React.createElement("text", { x:"72",  y:"72",  textAnchor:"middle", fontFamily:"Pirata One,serif", fontSize:"9", fill:"rgba(74,37,16,.6)" }, "NO"),
 
-      /*#__PURE__*/React.createElement("polygon", { points: "120,66 124,80 116,80", fill: "#c0392b", opacity: "0.4" })
+      /* Triangle rouge nord sur le cadran */
+      /*#__PURE__*/React.createElement("polygon", { points:"120,66 124,80 116,80", fill:"#c0392b", opacity:"0.4" })
     ),
 
-    /* ── Flèche de direction ── */
+    /* ── Flèche de direction balise (rotation indépendante) ── */
     /*#__PURE__*/React.createElement("g", {
       style: { transform: "var(--arrow-rot)", transformOrigin: "120px 120px", transition: "transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94)" },
       filter: "url(#cgGlow)"
     },
-      /*#__PURE__*/React.createElement("polygon", { points: "120,68 127,100 113,100", fill: "#f97316", stroke: "#7a3912", strokeWidth: "1.2" }),
-      /*#__PURE__*/React.createElement("rect",    { x: "115", y: "100", width: "10", height: "28", fill: "#f97316", stroke: "#7a3912", strokeWidth: "0.8", rx: "2" }),
-      /*#__PURE__*/React.createElement("polygon", { points: "120,172 127,142 113,142", fill: "#1a6b3f", stroke: "rgba(15,47,32,.5)", strokeWidth: "1" }),
-      /*#__PURE__*/React.createElement("rect",    { x: "115", y: "128", width: "10", height: "14", fill: "#1a6b3f", rx: "2" })
+      /* Pointe orange (direction balise) */
+      /*#__PURE__*/React.createElement("polygon", { points:"120,68 127,100 113,100", fill:"#f97316", stroke:"#7a3912", strokeWidth:"1.2" }),
+      /* Corps */
+      /*#__PURE__*/React.createElement("rect",    { x:"115", y:"100", width:"10", height:"28", fill:"#f97316", stroke:"#7a3912", strokeWidth:"0.8", rx:"2" }),
+      /* Queue verte (côté opposé) */
+      /*#__PURE__*/React.createElement("polygon", { points:"120,172 127,142 113,142", fill:"#1a6b3f", stroke:"rgba(15,47,32,.5)", strokeWidth:"1" }),
+      /*#__PURE__*/React.createElement("rect",    { x:"115", y:"128", width:"10", height:"14", fill:"#1a6b3f", rx:"2" })
     ),
 
-    /*#__PURE__*/React.createElement("circle", { cx: "120", cy: "120", r: "11", fill: "#c8860a", stroke: "#3b1b0b", strokeWidth: "2.5" }),
-    /*#__PURE__*/React.createElement("circle", { cx: "120", cy: "120", r: "5",  fill: "#3b1b0b" }),
-    /*#__PURE__*/React.createElement("circle", { cx: "120", cy: "120", r: "116", fill: "none", stroke: "rgba(200,150,60,.35)", strokeWidth: "1.5" })
+    /* ── Pivot central ── */
+    /*#__PURE__*/React.createElement("circle", { cx:"120", cy:"120", r:"11", fill:"#c8860a", stroke:"#3b1b0b", strokeWidth:"2.5" }),
+    /*#__PURE__*/React.createElement("circle", { cx:"120", cy:"120", r:"5",  fill:"#3b1b0b" }),
+
+    /* ── Anneau extérieur décoratif ── */
+    /*#__PURE__*/React.createElement("circle", { cx:"120", cy:"120", r:"116", fill:"none", stroke:"rgba(200,150,60,.35)", strokeWidth:"1.5" })
   ),
 
   /* Badge source du cap */
@@ -2272,8 +2287,7 @@ oPerm !== "granted" && /*#__PURE__*/React.createElement("button", {
     className: "btn btn-ghost",
     style: { width: "100%" },
     onClick: reqOrient
-  }, "🧭 Activer la boussole")
-  ), /*#__PURE__*/React.createElement("div", {
+  }, "🧭 Activer la boussole"), /*#__PURE__*/React.createElement("div", {
     style: S.sep
   }), /*#__PURE__*/React.createElement("div", {
     style: S.col
@@ -2696,7 +2710,7 @@ oPerm !== "granted" && /*#__PURE__*/React.createElement("button", {
       minWidth: 140,
       padding: ".8rem"
     },
-    onClick: () => level && startGame(level)
+    onClick: () => level && startGame(level, mode)
   }, "Relancer une partie"), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-ghost",
     style: {
@@ -2704,7 +2718,7 @@ oPerm !== "granted" && /*#__PURE__*/React.createElement("button", {
       minWidth: 140
     },
     onClick: resetGame
-  }, "Retour \xE0 l'accueil"))))));
+  }, "Retour \xE0 l'accueil")))))));
 }
 ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(App));
 </script>
