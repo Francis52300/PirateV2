@@ -2745,20 +2745,21 @@ ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(
      PWA — Service Worker + bannière d'installation
      ═══════════════════════════════════════════════ -->
 <script>
-/* ── Bloquer pull-to-refresh et swipe-to-go-back ── */
+/* ── Solution CSS uniquement : bloquer pull-to-refresh sans toucher au scroll ── */
 (function() {
-  // Empêcher le pull-to-refresh Chrome Android
-  let startY = 0;
-  document.addEventListener('touchstart', function(e) {
-    startY = e.touches[0].clientY;
-  }, { passive: true });
-  document.addEventListener('touchmove', function(e) {
-    const y = e.touches[0].clientY;
-    // Bloquer si scroll vers le bas depuis le haut de la page
-    if (y > startY && window.scrollY === 0) {
-      e.preventDefault();
+  // Désactiver l'effet de "trop-plein" de scroll sur l'élément racine
+  // Cela empêche le pull-to-refresh sur Chrome Android tout en laissant le scroll normal fonctionner
+  const style = document.createElement('style');
+  style.textContent = `
+    html, body {
+      overscroll-behavior-y: none;
+      -webkit-overflow-scrolling: touch;
     }
-  }, { passive: false });
+  `;
+  document.head.appendChild(style);
+  
+  // Note: Le touchmove listener était trop agressif — on le supprime
+  // Le CSS overscroll-behavior suffit pour bloquer le pull-to-refresh
 })();
 
 /* ── Enregistrement du Service Worker ── */
