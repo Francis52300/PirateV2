@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
 <style>
 /* Désactiver pull-to-refresh et overscroll sur Chrome Android */
-html { overscroll-behavior-y: none; }
-body { overscroll-behavior-y: none; touch-action: pan-x pan-y; }
+html { overflow-y: auto; overscroll-behavior-y: contain; }
+body { overflow-y: auto; overscroll-behavior-y: contain; touch-action: pan-x pan-y; }
 </style>
 <title>Trésor Pirate — Lac du Der</title>
 
@@ -2745,21 +2745,19 @@ ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(
      PWA — Service Worker + bannière d'installation
      ═══════════════════════════════════════════════ -->
 <script>
-/* ── Solution CSS uniquement : bloquer pull-to-refresh sans toucher au scroll ── */
+/* ── Empêcher uniquement le swipe-back iOS ── */
 (function() {
-  // Désactiver l'effet de "trop-plein" de scroll sur l'élément racine
-  // Cela empêche le pull-to-refresh sur Chrome Android tout en laissant le scroll normal fonctionner
-  const style = document.createElement('style');
-  style.textContent = `
-    html, body {
-      overscroll-behavior-y: none;
-      -webkit-overflow-scrolling: touch;
-    }
-  `;
-  document.head.appendChild(style);
+  let startX = 0;
+  document.addEventListener('touchstart', (e) => {
+    startX = e.touches[0].clientX;
+  }, { passive: true });
   
-  // Note: Le touchmove listener était trop agressif — on le supprime
-  // Le CSS overscroll-behavior suffit pour bloquer le pull-to-refresh
+  document.addEventListener('touchmove', (e) => {
+    const deltaX = e.touches[0].clientX - startX;
+    if (startX < 15 && deltaX > 20) {
+      e.preventDefault();
+    }
+  }, { passive: false });
 })();
 
 /* ── Enregistrement du Service Worker ── */
