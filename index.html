@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<style>
+/* Désactiver pull-to-refresh et overscroll sur Chrome Android */
+html { overscroll-behavior-y: none; }
+body { overscroll-behavior-y: none; touch-action: pan-x pan-y; }
+</style>
 <title>Trésor Pirate — Lac du Der</title>
 
 <!-- PWA Manifest -->
@@ -36,7 +41,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow-x:hidden}
+html,body{height:100%;overflow-x:hidden;overscroll-behavior:none}
 body{
   font-family:"IM Fell English",Georgia,serif;
   min-height:100vh;
@@ -2453,7 +2458,7 @@ oPerm !== "granted" && /*#__PURE__*/React.createElement("button", {
       fontSize: "1.15rem",
       color: "#4b2a17"
     }
-  }, "\xC9nigme \xAB ", curPt.riddle.theme, " \xBB"), /*#__PURE__*/React.createElement("span", {
+  }, "\xC9nigme"), /*#__PURE__*/React.createElement("span", {
     style: S.badge("teal")
   }, "Rayon valid\xE9 \u2713")), /*#__PURE__*/React.createElement("p", {
     style: {
@@ -2740,6 +2745,22 @@ ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(
      PWA — Service Worker + bannière d'installation
      ═══════════════════════════════════════════════ -->
 <script>
+/* ── Bloquer pull-to-refresh et swipe-to-go-back ── */
+(function() {
+  // Empêcher le pull-to-refresh Chrome Android
+  let startY = 0;
+  document.addEventListener('touchstart', function(e) {
+    startY = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener('touchmove', function(e) {
+    const y = e.touches[0].clientY;
+    // Bloquer si scroll vers le bas depuis le haut de la page
+    if (y > startY && window.scrollY === 0) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+})();
+
 /* ── Enregistrement du Service Worker ── */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
