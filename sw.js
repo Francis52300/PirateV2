@@ -34,7 +34,7 @@ const CDN_HOSTS = [
 
 /* ── Installation ── */
 self.addEventListener('install', event => {
-  console.log('[SW] Installation v1');
+  console.log('[SW] Installation v1.1');
   event.waitUntil(
     caches.open(CACHE_VERSION)
       .then(cache => cache.addAll(PRECACHE_ASSETS))
