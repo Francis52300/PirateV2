@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+/* Réalisation Francis Edot aidé par Claude AI 2026 */
 <html lang="fr">
 <head>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -14,7 +15,7 @@ body { overflow-y: auto; overscroll-behavior-y: contain; touch-action: pan-x pan
 <title>Trésor Pirate — Lac du Der</title>
 
 <!-- PWA Manifest -->
-<link rel="manifest" href="manifest.json"/>
+<link rel="manifest" href="./manifest.json"/>
 
 <!-- iOS PWA support -->
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -253,7 +254,7 @@ const LEVELS = {
     label: "Facile",
     duration: 30,
     points: 3,
-    blurb: "3 balises · idéal en famille",
+    blurb: "3 balises + retour ponton · idéal en famille",
     emoji: "⚓",
     estMin: 35,
     estMax: 55,
@@ -263,7 +264,7 @@ const LEVELS = {
     label: "Normal",
     duration: 45,
     points: 4,
-    blurb: "4 balises · pour les explorateurs",
+    blurb: "4 balises + retour ponton · pour les explorateurs",
     emoji: "🗺️",
     estMin: 50,
     estMax: 75,
@@ -273,7 +274,7 @@ const LEVELS = {
     label: "Expert",
     duration: 60,
     points: 5,
-    blurb: "5 balises · énigmes corsées",
+    blurb: "5 balises + retour ponton · énigmes corsées",
     emoji: "💀",
     estMin: 70,
     estMax: 100,
@@ -594,6 +595,7 @@ const RIDDLES = [{
   clue: "Regarde sous la surface là où l'eau prend une teinte verte.",
   rewardHint: "Les algues t'offrent une lettre venue des profondeurs."
 }];
+
 const SK = "lacder-pirate-records";
 const EMPTY_REC = {
   easy: null,
@@ -1133,7 +1135,7 @@ function App() {
   const [mapOpen, setMapOpen] = useState(false);
   const [returning, setReturning] = useState(false); // phase retour au départ après dernière énigme
   const [distReturn, setDistReturn] = useState(null); // distance au point de départ
-  const RETURN_RADIUS = 40;
+  const RETURN_RADIUS = 80; // Rayon élargi pour compenser l'imprécision GPS
   const [rentalMinutes, setRentalMinutes] = useState(60);
   const geoRef = useRef(null);
   const gpsHeadingRef = useRef(null);
@@ -1314,13 +1316,18 @@ function App() {
 
   useEffect(() => {
     if (!curPt || dist === null) return;
-    // Vérifier que la distance calculée correspond bien à la balise ACTIVE
-    // (évite le déverrouillage immédiat quand on vient de changer de cible)
     if (curPt.id !== activePointIdRef.current) return;
     if (dist <= curPt.radius) {
-      setUnlocked(p => p.includes(curPt.id) ? p : [...p, curPt.id]);
+      // Balise ponton (isPonton) → ouvre le vault directement sans énigme
+      if (curPt.isPonton) {
+        const tot = Date.now() - (tStart ?? Date.now());
+        setElapsed(tot);
+        setStage("vault");
+      } else {
+        setUnlocked(p => p.includes(curPt.id) ? p : [...p, curPt.id]);
+      }
     }
-  }, [curPt, dist]);
+  }, [curPt, dist, tStart]);
 
   /* Distance au point de départ (phase returning) */
   useEffect(() => {
@@ -1333,10 +1340,9 @@ function App() {
 
   /* Boussole — pointe vers la cible active ou vers le départ si returning */
   const brgTarget = useMemo(() => {
-    if (!userPos) return null;
-    if (returning) return PLAY_ZONE[0];
-    return curPt?.location ?? null;
-  }, [userPos, returning, curPt]);
+    if (!userPos || !curPt) return null;
+    return curPt.location; // pointe toujours vers la balise courante (incl. ponton)
+  }, [userPos, curPt]);
   const brg = useMemo(() => !userPos || !brgTarget ? 0 : bearing(userPos, brgTarget), [userPos, brgTarget]);
   const rot = useMemo(() => {
     const h = oPerm === "granted" ? heading : 0;
@@ -1367,10 +1373,18 @@ function App() {
       riddle: puzz[i] ?? RIDDLES[i % RIDDLES.length],
       reward: tok
     }));
-    const routed = shuffle(gen).map((p, i) => ({
-      ...p,
-      id: i + 1
-    }));
+    // Mélanger les balises intermédiaires puis ajouter le ponton en DERNIÈRE position
+    const shuffled = shuffle(gen).map((p, i) => ({ ...p, id: i + 1 }));
+    // Balise finale fixe = le ponton de départ (pas d'énigme, ouvre le vault directement)
+    const pontonBalise = {
+      id: shuffled.length + 1,
+      location: PLAY_ZONE[0],
+      radius: 60,
+      riddle: null,
+      reward: null,
+      isPonton: true
+    };
+    const routed = [...shuffled, pontonBalise];
     setLevel(lv);
     setPoints(routed);
     setObjective(obj);
@@ -1415,16 +1429,10 @@ function App() {
     setTimeout(() => {
       setAnsFb(null);
       setAns("");
-      if (next >= points.length) {
-        /* Toutes les énigmes résolues → retour au point de départ */
-        setReturning(true);
-        setDProg(0); // reset slider démo pour simuler le retour
-      } else {
-        // Réinitialiser AVANT de changer de cible pour éviter le re-déclenchement
-        setUnlocked([]);
-        setDist(null);
-        setAIdx(p => Math.min(p + 1, points.length - 1));
-      }
+      // Avancer à la balise suivante (ou ponton si c'est la dernière énigme)
+      setUnlocked([]);
+      setDist(null);
+      setAIdx(p => Math.min(p + 1, points.length - 1));
     }, 1700);
   };
   const handleFinal = () => {
@@ -2124,7 +2132,7 @@ function App() {
       ...S.txts,
       marginTop: ".4rem"
     }
-  }, returning ? "Toutes les balises validées — regagne le ponton de départ !" : `Balise ${aIdx + 1}/${points.length} · Rayon d'activation : ${curPt.radius} m`)), /*#__PURE__*/React.createElement("div", {
+  }, returning ? "Retourne au ponton de départ !" : curPt && curPt.isPonton ? `⚓ Balise finale — Ponton ! (${aIdx + 1}/${points.length})` : `Balise ${aIdx + 1}/${points.length} · Rayon d'activation : ${curPt.radius} m`)), /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
       padding: "1.25rem 1.5rem"
@@ -2366,55 +2374,25 @@ oPerm !== "granted" && /*#__PURE__*/React.createElement("button", {
       textTransform: "uppercase",
       color: "#593018"
     }
-  }, status === "done" ? "✓ Validée" : status === "current" ? "En cours" : "À venir"))))), returning && /*#__PURE__*/React.createElement("div", {
-    className: "card",
-    style: {
-      padding: "1.5rem 1.75rem",
-      border: "2px solid rgba(196,132,26,.7)",
-      background: "linear-gradient(145deg,#fdf0cb,#f5d87a 50%,#e8b840)"
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: "flex",
-      gap: "1rem",
-      alignItems: "flex-start"
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: "2.2rem",
-      lineHeight: 1,
-      flexShrink: 0
-    }
-  }, "\u2693"), /*#__PURE__*/React.createElement("div", {
-    style: {
-      width: "100%"
-    }
-  }, /*#__PURE__*/React.createElement("h3", {
-    style: {
-      fontSize: "1.2rem",
-      color: "#4b2a17",
-      marginBottom: ".4rem"
-    }
-  }, "Retourne au ponton !"), /*#__PURE__*/React.createElement("p", {
-    style: {
-      ...S.txt,
-      marginBottom: ".75rem"
-    }
-  }, "Toutes les \xE9nigmes sont r\xE9solues. Rejoins le ", /*#__PURE__*/React.createElement("strong", null, "point de d\xE9part"), " pour ouvrir le coffre de ", CAPTAIN, "."), distReturn !== null && /*#__PURE__*/React.createElement("div", {
-    style: {
-      borderRadius: 10,
-      background: "rgba(0,0,0,.12)",
-      padding: "8px 14px",
-      fontSize: ".9rem",
-      textAlign: "center",
-      fontWeight: 600,
-      color: "#3b1b0b"
-    }
-  }, "\uD83D\uDCCD ", Math.max(0, Math.round(distReturn)), " m du ponton", distReturn > RETURN_RADIUS && /*#__PURE__*/React.createElement("span", {
-    style: {
-      color: "#7a3912"
-    }
-  }, " \xB7 encore ", Math.max(0, Math.round(distReturn - RETURN_RADIUS)), " m"))))), !returning && !unlocked.includes(curPt.id) && !solved.includes(curPt.id) && /*#__PURE__*/React.createElement("div", {
+  }, status === "done" ? "✓ Validée" : status === "current" ? "En cours" : "À venir"))))), !unlocked.includes(curPt.id) && !solved.includes(curPt.id) && curPt.isPonton
+    ? /*#__PURE__*/React.createElement("div", {
+        className: "card",
+        style: { padding: "1.5rem 1.75rem", border: "2px solid rgba(196,132,26,.7)", background: "linear-gradient(145deg,#fdf0cb,#f5d87a 50%,#e8b840)" }
+      },
+      /*#__PURE__*/React.createElement("div", { style: { display:"flex", gap:"1rem", alignItems:"flex-start" } },
+        /*#__PURE__*/React.createElement("span", { style: { fontSize:"2.2rem", flexShrink:0 } }, "\u2693"),
+        /*#__PURE__*/React.createElement("div", null,
+          /*#__PURE__*/React.createElement("p", { style: { fontWeight:600, color:"#4b2a17", fontSize:"1.05rem", marginBottom:".4rem" } }, "Tu es au ponton !"),
+          /*#__PURE__*/React.createElement("p", { style: { fontSize:".9rem", color:"#3b1b0b", lineHeight:1.6 } },
+            "Bravo, Moussaillon ! Tu as récupéré tous les fragments. Le coffre du Capitaine Francis BlackWood t\u2019attend — approche-toi encore un peu pour l\u2019ouvrir."
+          ),
+          dist !== null && /*#__PURE__*/React.createElement("div", {
+            style: { marginTop:".6rem", borderRadius:10, background:"rgba(0,0,0,.12)", padding:"6px 12px", fontSize:".85rem", textAlign:"center", fontWeight:600 }
+          }, "\uD83D\uDCCD ", Math.max(0, Math.round(dist)), " m du coffre")
+        )
+      )
+    )
+    : !unlocked.includes(curPt.id) && !solved.includes(curPt.id) && !curPt.isPonton && /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
       padding: "1.25rem 1.5rem"
@@ -2446,7 +2424,7 @@ oPerm !== "granted" && /*#__PURE__*/React.createElement("button", {
       fontSize: ".85rem",
       textAlign: "center"
     }
-  }, "\uD83D\uDCCD ", Math.round(dist), " m \xB7 encore ", Math.max(0, Math.round(dist - curPt.radius)), " m")))), !returning && unlocked.includes(curPt.id) && !solved.includes(curPt.id) && /*#__PURE__*/React.createElement("div", {
+  }, "\uD83D\uDCCD ", Math.round(dist), " m \xB7 encore ", Math.max(0, Math.round(dist - curPt.radius)), " m")))), unlocked.includes(curPt.id) && !solved.includes(curPt.id) && !curPt.isPonton && /*#__PURE__*/React.createElement("div", {
     className: "card",
     style: {
       padding: "1.5rem 1.75rem"
@@ -2778,7 +2756,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(React.createElement(
 /* ── Enregistrement du Service Worker ── */
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js?v=2')
+    navigator.serviceWorker.register('./sw.js')
       .then(reg => {
          reg.onupdatefound = () => {
       const newWorker = reg.installing;
@@ -2924,7 +2902,7 @@ if (isIOS && isSafari && !isStandalone) {
 </script>
 <script>
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js?v=2').then(reg => {
+  navigator.serviceWorker.register('./sw.js').then(reg => {
 
     reg.onupdatefound = () => {
       const newWorker = reg.installing;

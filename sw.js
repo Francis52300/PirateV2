@@ -6,9 +6,9 @@
    - APIs externes (fonts, Leaflet, React) : Stale While Revalidate
    ================================================================ */
 
-const CACHE_VERSION    = 'tresor-pirate-v13';
-const TILE_CACHE       = 'tresor-tiles-v13';
-const ASSETS_CACHE     = 'tresor-assets-v13';
+const CACHE_VERSION    = 'tresor-pirate-v15';
+const TILE_CACHE       = 'tresor-tiles-v15';
+const ASSETS_CACHE     = 'tresor-assets-v15';
 
 /* Assets à précacher au moment de l'installation */
 const PRECACHE_ASSETS = [
