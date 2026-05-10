@@ -2918,30 +2918,5 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
-<script
-// 3. Gérer le clic sur notre bouton personnalisé
-window.addEventListener('click', (e) => {
-    if (!deferredPrompt) return; // S'assurer que l'événement est disponible
-
-    // Déclencher l'installation réelle
-    deferredPrompt.prompt(); 
-    
-    // Attendre la réponse de l'utilisateur
-    deferredPrompt.userChoice.then((choice) => {
-        if (choice === 'accepted') {
-            console.log('L\'utilisateur a accepté l\'installation.');
-            // Ici, vous pouvez montrer un message de succès de type "Partie installée avec succès !"
-        } else {
-            console.log('L\'utilisateur a rejeté l\'installation.');
-        }
-        // Cacher le bouton après l'interaction
-        const installButton = document.getElementById('install-button');
-        if (installButton) {
-            installButton.style.display = 'none';
-        }
-    });
-});
-</script
-<script> src="app.js"></script>
 </body>
 </html>
