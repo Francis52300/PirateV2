@@ -2918,29 +2918,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
-// ==================================================
-// 🌟 NOUVELLE FONCTIONNALITÉ : Déclenchement du Prompt PWA
-// ==================================================
-
-let deferredPrompt; // Variable pour stocker l'événement lorsqu'il est disponible
-
-// 1. Écouter l'événement 'beforeinstallprompt' du navigateur
-window.addEventListener('beforeinstallprompt', (e) => {
-    // Empêche le navigateur de montrer son propre prompt automatique
-    e.preventDefault(); 
-    
-    // Stocke l'événement pour qu'on puisse le déclencher plus tard
-    deferredPrompt = e;
-
-    // 2. Afficher notre propre élément UI (le bouton)
-    const installButton = document.getElementById('install-button'); // Assurez-vous d'avoir ce bouton dans votre HTML
-    if (installButton) {
-        installButton.style.display = 'block'; // Le rendre visible
-    }
-    console.log("PWA Detectée : Le bouton d'installation est prêt.");
-});
-
-
 // 3. Gérer le clic sur notre bouton personnalisé
 window.addEventListener('click', (e) => {
     if (!deferredPrompt) return; // S'assurer que l'événement est disponible
