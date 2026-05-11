@@ -170,6 +170,80 @@ input[type=text]::placeholder{color:#8a6040}
 </style>
 </head>
 <body>
+
+<!-- ========== CARTE D'INSTALLATION PWA (visible avant le jeu) ========== -->
+<div id="pwa-install-card" style="
+  display:none;
+  max-width:560px;margin:0 auto;
+  padding:1.2rem 1rem 0;
+  position:relative;z-index:20;
+">
+  <div style="
+    border-radius:22px;
+    border:2px solid rgba(196,132,26,.55);
+    background:linear-gradient(145deg,#1e0f05,#2d1608);
+    padding:1.1rem 1.2rem;
+    display:flex;align-items:center;gap:14px;
+    box-shadow:0 8px 32px rgba(0,0,0,.55),inset 0 0 40px rgba(255,200,80,.04);
+    font-family:'IM Fell English',serif;
+    color:#fef3c7;
+  ">
+    <img src="icons/icon-72.png" width="52" height="52"
+         style="border-radius:13px;flex-shrink:0;box-shadow:0 4px 12px rgba(0,0,0,.4)" alt="icône"/>
+    <div style="flex:1;min-width:0">
+      <p style="font-family:'Pirata One',serif;font-size:1rem;margin:0 0 3px;color:#f7c560;letter-spacing:.04em">
+        ⚓ Installer Trésor Pirate
+      </p>
+      <p id="pwa-install-desc" style="font-size:.78rem;opacity:.75;margin:0;line-height:1.4">
+        Plein écran · GPS natif · Fonctionne hors-ligne
+      </p>
+    </div>
+    <!-- Bouton Android/Chrome -->
+    <button id="pwa-install-btn-card" style="
+      display:none;
+      background:linear-gradient(120deg,#b8731b,#f7c560 52%,#e19c2a);
+      color:#2c1203;font-weight:700;font-family:'IM Fell English',serif;
+      border:none;border-radius:99px;
+      padding:9px 20px;font-size:.88rem;
+      cursor:pointer;white-space:nowrap;flex-shrink:0;
+      box-shadow:0 6px 18px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.25);
+    ">⬇ Installer</button>
+    <!-- Bouton iOS (pas de prompt natif, ouvre les instructions) -->
+    <button id="pwa-ios-btn-card" style="
+      display:none;
+      background:linear-gradient(120deg,#b8731b,#f7c560 52%,#e19c2a);
+      color:#2c1203;font-weight:700;font-family:'IM Fell English',serif;
+      border:none;border-radius:99px;
+      padding:9px 20px;font-size:.88rem;
+      cursor:pointer;white-space:nowrap;flex-shrink:0;
+      box-shadow:0 6px 18px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.25);
+    ">⬆ Comment ?</button>
+    <!-- Bouton fermer -->
+    <button id="pwa-card-dismiss" style="
+      background:transparent;border:none;color:rgba(255,243,199,.5);
+      font-size:1.1rem;cursor:pointer;padding:4px;flex-shrink:0;line-height:1;
+    " aria-label="Fermer">✕</button>
+  </div>
+  <!-- Instructions iOS (masquées par défaut) -->
+  <div id="pwa-ios-steps" style="
+    display:none;
+    margin-top:8px;
+    border-radius:16px;
+    border:1.5px solid rgba(196,132,26,.35);
+    background:rgba(30,15,5,.92);
+    padding:.9rem 1.1rem;
+    font-family:'IM Fell English',serif;color:#fef3c7;
+    font-size:.82rem;line-height:1.6;
+  ">
+    <p style="font-family:'Pirata One',serif;color:#f7c560;margin:0 0 6px;font-size:.9rem">
+      📱 Installation sur iPhone / iPad
+    </p>
+    <p style="margin:0 0 3px">1. Appuie sur <strong>⬆ Partager</strong> en bas de Safari</p>
+    <p style="margin:0 0 3px">2. Fais défiler et appuie sur <strong>« Sur l'écran d'accueil »</strong></p>
+    <p style="margin:0">3. Confirme avec <strong>Ajouter</strong> en haut à droite</p>
+  </div>
+</div>
+
 <div id="root"></div>
 
 <!-- Chargement de l'application React (fichier externe) -->
@@ -177,114 +251,84 @@ input[type=text]::placeholder{color:#8a6040}
 
 <!-- ==================== PWA : Gestion installation ==================== -->
 <script>
-// UNIQUE gestionnaire beforeinstallprompt
-let deferredInstallPrompt = null;
+(function () {
+  const card = document.getElementById('pwa-install-card');
+  const btnAndroid = document.getElementById('pwa-install-btn-card');
+  const btnIOS = document.getElementById('pwa-ios-btn-card');
+  const iosSteps = document.getElementById('pwa-ios-steps');
+  const dismissBtn = document.getElementById('pwa-card-dismiss');
 
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredInstallPrompt = e;
-  console.log('[PWA] beforeinstallprompt capturé');
-  showInstallBanner();
-  // Afficher également le bouton permanent s'il existe
-  const permBtn = document.getElementById('pwa-permanent-install-btn');
-  if (permBtn) permBtn.style.display = 'inline-flex';
-});
+  // Détection plateforme
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                    || window.navigator.standalone === true;
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
-function showInstallBanner() {
-  if (document.getElementById('pwa-install-banner')) return;
-  const banner = document.createElement('div');
-  banner.id = 'pwa-install-banner';
-  banner.innerHTML = `
-    <div style="
-      position:fixed;bottom:0;left:0;right:0;z-index:9999;
-      background:linear-gradient(135deg,#1a1008,#2d1a08);
-      border-top:2px solid rgba(196,132,26,.6);
-      padding:14px 16px;display:flex;align-items:center;gap:12px;
-      font-family:'IM Fell English',serif;color:#fef3c7;
-      box-shadow:0 -4px 24px rgba(0,0,0,.5);
-    ">
-      <img src="icons/icon-72.png" width="44" height="44" style="border-radius:10px;flex-shrink:0" alt="icône"/>
-      <div style="flex:1;min-width:0">
-        <p style="font-family:'Pirata One',serif;font-size:.95rem;margin:0 0 2px;color:#f7c560">
-          ⚓ Installer Trésor Pirate
-        </p>
-        <p style="font-size:.78rem;opacity:.8;margin:0">
-          Accès hors-ligne · Plein écran · GPS natif
-        </p>
-      </div>
-      <button id="pwa-install-btn" style="
-        background:linear-gradient(120deg,#b8731b,#f7c560 52%,#e19c2a);
-        color:#2c1203;font-weight:700;font-family:'IM Fell English',serif;
-        border:none;border-radius:99px;padding:8px 18px;font-size:.88rem;
-        cursor:pointer;white-space:nowrap;flex-shrink:0;
-      ">Installer</button>
-      <button id="pwa-dismiss-btn" style="
-        background:transparent;border:none;color:#fef3c7;
-        font-size:1.3rem;cursor:pointer;padding:4px;flex-shrink:0;opacity:.7;
-      ">✕</button>
-    </div>
-  `;
-  document.body.appendChild(banner);
+  // Si déjà installée, ne rien afficher
+  if (isStandalone) return;
 
-  document.getElementById('pwa-install-btn').addEventListener('click', () => {
-    if (deferredInstallPrompt) {
-      deferredInstallPrompt.prompt();
-      deferredInstallPrompt.userChoice.then(choice => {
-        console.log('[PWA] Installation', choice.outcome);
-        deferredInstallPrompt = null;
-        hideInstallBanner();
-        const permBtn = document.getElementById('pwa-permanent-install-btn');
-        if (permBtn) permBtn.style.display = 'none';
-      });
-    }
+  let deferredPrompt = null;
+
+  // Android / Chrome : attendre l'événement beforeinstallprompt
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    btnAndroid.style.display = 'inline-block';
+    card.style.display = 'block';
   });
 
-  document.getElementById('pwa-dismiss-btn').addEventListener('click', hideInstallBanner);
-}
+  // iOS Safari : afficher le bouton "Comment ?" immédiatement
+  if (isIOS && isSafari) {
+    btnIOS.style.display = 'inline-block';
+    card.style.display = 'block';
+  }
 
-function hideInstallBanner() {
-  const b = document.getElementById('pwa-install-banner');
-  if (b) b.remove();
-}
-
-// Enregistrement du Service Worker (unique)
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .then(reg => console.log('[SW] enregistré', reg))
-      .catch(err => console.warn('[SW] erreur', err));
+  // Clic bouton Android → déclencher le prompt natif
+  btnAndroid.addEventListener('click', () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(choice => {
+      console.log('[PWA] Installation :', choice.outcome);
+      deferredPrompt = null;
+      if (choice.outcome === 'accepted') {
+        card.style.display = 'none';
+      }
+    });
   });
-}
 
-// Mise à jour automatique (optionnelle)
-let refreshing = false;
-navigator.serviceWorker.addEventListener('controllerchange', () => {
-  if (refreshing) return;
-  refreshing = true;
-  window.location.reload();
-});
+  // Clic bouton iOS → afficher/masquer les instructions
+  btnIOS.addEventListener('click', () => {
+    iosSteps.style.display = iosSteps.style.display === 'none' ? 'block' : 'none';
+  });
+
+  // Fermer la carte
+  dismissBtn.addEventListener('click', () => {
+    card.style.display = 'none';
+  });
+
+  // Une fois installée (standalone), masquer
+  window.matchMedia('(display-mode: standalone)').addEventListener('change', (e) => {
+    if (e.matches) card.style.display = 'none';
+  });
+
+  // Enregistrement du Service Worker
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(reg => console.log('[SW] enregistré', reg.scope))
+        .catch(err => console.warn('[SW] erreur', err));
+    });
+  }
+
+  // Rechargement auto après mise à jour SW
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshing) return;
+    refreshing = true;
+    window.location.reload();
+  });
+})();
 </script>
 
-<!-- Instructions iOS (optionnel, gardez-le) -->
-<script>
-const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
-if (isIOS && isSafari && !isStandalone) {
-  setTimeout(() => {
-    const tip = document.createElement('div');
-    tip.id = 'ios-tip';
-    tip.innerHTML = `
-      <div style="position:fixed;bottom:0;left:0;right:0;z-index:9999;background:linear-gradient(135deg,#1a1008,#2d1a08);border-top:2px solid rgba(196,132,26,.6);padding:16px;font-family:'IM Fell English',serif;color:#fef3c7;text-align:center;box-shadow:0 -4px 24px rgba(0,0,0,.5);">
-        <p style="font-family:'Pirata One',serif;font-size:.95rem;color:#f7c560;margin:0 0 6px">⚓ Installer Trésor Pirate sur iPhone</p>
-        <p style="font-size:.82rem;opacity:.85;margin:0 0 4px">Appuie sur <strong>⬆ Partager</strong> puis <strong>« Sur l'écran d'accueil »</strong></p>
-        <p style="font-size:.75rem;opacity:.6;margin:0">Fonctionne hors-ligne · GPS natif · Plein écran</p>
-        <button onclick="document.getElementById('ios-tip').remove()" style="margin-top:10px;background:transparent;border:1px solid rgba(196,132,26,.5);color:#fef3c7;border-radius:99px;padding:5px 18px;font-family:inherit;cursor:pointer;">Fermer</button>
-      </div>
-    `;
-    document.body.appendChild(tip);
-  }, 3000);
-}
-</script>
 </body>
 </html>
