@@ -6,7 +6,7 @@
    - APIs externes (fonts, Leaflet, React) : Stale While Revalidate
    ================================================================ */
 
-const CACHE_VERSION    = 'tresor-pirate-v15';
+const CACHE_VERSION    = 'tresor-pirate-v16';
 const TILE_CACHE       = 'tresor-tiles-v15';
 const ASSETS_CACHE     = 'tresor-assets-v15';
 
