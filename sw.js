@@ -140,4 +140,3 @@ self.addEventListener('message', event => {
     caches.delete(TILE_CACHE).then(() => console.log('[SW] Cache tuiles vidé'));
   }
 });
-
